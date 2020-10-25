@@ -24,7 +24,7 @@ exports.success = function(req, res, message, status) {
   });
 }
 
-exports.error = function(req, res, error, status, details) {
+exports.error = function(req, res, error, status, details, data = '') {
   let statusCode = status;
   let statusMessageError = error;
 
@@ -39,6 +39,6 @@ exports.error = function(req, res, error, status, details) {
   console.error('[response error]: ' + details)
   res.status(statusCode).send({
     error: statusMessageError,
-    data: ''
+    data: data
   });
 }

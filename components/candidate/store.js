@@ -1,73 +1,34 @@
-const mysql = require('mysql');
-const async = require('async');
-const config = require('../../config/defineDatabase');
-const filters = require('../../functions/functionsFilters');
+const axios = require('axios');
+const { HttpStatusCode } = require('../../utils/http_helper');
 
-const table = require('../../config/tables');
-const statuses = require('../status/store');
-
-const LVT_CASTING = require('../../config/defines').LVT_CASTING;
-
-const connection = mysql.createConnection({
-  host: config.HOSTNAME,
-  user: config.USERNAME,
-  password: config.PASSWORD,
-  database: config.DATABASENAME
-});
-
-function getPerson(params) {
+function getCandidateByUsername (username) {
   return new Promise((resolve, reject) => {
-    let id = params.id || undefined;
-    let offset = parseInt(params.offset) || 0;
-    let limit = parseInt(params.limit) || undefined;
-    let allstatus = params.allstatus || undefined;
-    let statusCond = ` p.idpersonstatus != ${statuses.StatusEnum.DELETED}`;
-    
-    if(typeof(allstatus) === 'undefined' || allstatus <= 0) {
-      statusCond = ` p.idpersonstatus = ${statuses.StatusEnum.ACTIVE} `;
-    }
-    
-    let getResults = getSelectQuery(id, statusCond);
-
-    if(typeof(id) === 'undefined') {
-      if(typeof(limit) != 'undefined') {
-        getResults += ` LIMIT ?,?;`;
-      }
-      connection.query(getResults, [offset, limit], function(err, row) {
-        if(err) {
-          console.log('[QUERY getField - ALL]: ' + this.sql);
-          return reject(err);
+    axios.get('https://torre.bio/api/bios/' + username)
+      .then((response) => {
+        const responseData = {
+          status: response.status,
+          data: response.data
+        };
+        resolve(responseData);
+      })
+      .catch((error) => {
+        if (error.response) {
+          const responseData = {
+            status: error.response.status,
+            code: error.response.data.code,
+            error: error.response.data.message
+          };
+          resolve(responseData);
+        } else if (error.request) {
+          reject(error.request);
         } else {
-          let results;
-          if(row.length > 0) {
-            results = row;
-          } else {
-            results = undefined;
-          }
-          return resolve(results);
+          reject(error.message);
         }
       });
-    } else {
-      connection.query(getResults, [id], function(err, rows){
-        if(err) {
-          console.log('[QUERY getField - SINGLE]: ' + this.sql);
-          return reject(err);
-        } else {
-          let results;
-          if(rows.length > 0) {
-            results = rows;
-          } else {
-            results = undefined;
-          }
-          return resolve(results);
-        }
-      });
-    }
   });
 }
 
 
-
 module.exports = {
-  getPerson
+  getCandidateByUsername
 };
