@@ -28,7 +28,49 @@ function getCandidateBioByUsername (username) {
   });
 }
 
+function searchCandidatesByParam (params, size, offset) {
+  return new Promise((resolve, reject) => {
+    const url = 'https://search.torre.co/people/_search/?page=0&aggregate=true&offset=' + offset + '&size=' + size;
+    const data = params.skills.map((skill, index) => {
+      return {
+        skill: {
+          term: skill,
+          experience: '1-plus-year'
+        }
+      };
+    });
+
+    axios.post(
+      url,
+      {
+        and: data
+      }
+    )
+      .then((response) => {
+        const responseData = {
+          status: response.status,
+          data: response.data.results
+        };
+        resolve(responseData);
+      })
+      .catch((error) => {
+        if (error.response) {
+          const responseData = {
+            status: error.response.status,
+            code: error.response.data.code,
+            error: error.response.data.message
+          };
+          resolve(responseData);
+        } else if (error.request) {
+          reject(error.request);
+        } else {
+          reject(error.message);
+        }
+      });
+  });
+}
 
 module.exports = {
-  getCandidateBioByUsername
+  getCandidateBioByUsername,
+  searchCandidatesByParam
 };

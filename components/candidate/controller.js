@@ -4,27 +4,28 @@ const store = require('./store');
 class Candidate {
   constructor (candidate) {
     this.person = candidate.person;
-    this.experiences = candidate.experiences;
-    this.interests = candidate.interests;
-    this.jobs = candidate.jobs;
-    this.projects = candidate.projects;
-    this.languages = candidate.languages;
-    this.strengths = candidate.strengths;
-    this.professionalCultureGenomeResults = candidate.professionalCultureGenomeResults;
+    this.person.location = candidate.person.location.name || '';
+    this.experiences = candidate.experiences || [];
+    this.interests = candidate.interests || [];
+    this.jobs = candidate.jobs || [];
+    this.projects = candidate.projects || [];
+    this.languages = candidate.languages || [];
+    this.strengths = candidate.strengths || [];
+    this.professionalCultureGenomeResults = candidate.professionalCultureGenomeResults || [];
   }
 
   getBasicBio () {
     const { person } = this;
+
     return {
       candidateId: person.subjectId,
-      id: person.id,
       username: person.publicId,
-      phone: person.phone,
       name: person.name,
       picture: person.picture,
       pictureThumbnail: person.pictureThumbnail,
       summaryOfBio: person.summaryOfBio,
-      professionalHeadline: person.professionalHeadline
+      professionalHeadline: person.professionalHeadline,
+      location: person.location
     };
   }
 
@@ -91,7 +92,7 @@ function getCandidateSimpleBioByUsername (params) {
   return new Promise((resolve, reject) => {
     const username = params.username;
 
-    if (typeof (username) === 'undefined') {
+    if (typeof username === 'undefined') {
       reject(new Error('Parameter not defined or empty'));
     } else {
       store.getCandidateBioByUsername(username)
@@ -116,7 +117,7 @@ function getCandidateExtendedBioByUsername (params) {
   return new Promise((resolve, reject) => {
     const username = params.username;
 
-    if (typeof (username) === 'undefined') {
+    if (typeof username === 'undefined') {
       reject(new Error('Parameter not defined or empty'));
     } else {
       store.getCandidateBioByUsername(username)
@@ -137,7 +138,59 @@ function getCandidateExtendedBioByUsername (params) {
   });
 }
 
+function searchCandidatesBySkills(opts){
+  return new Promise((resolve, reject) => {
+    console.log("searchCandidatesBySkills");
+    const {skills, size, offset} = opts;
+
+    if (typeof skills === 'undefined') {
+      reject(new Error('Parameter not defined or empty'));
+    } else {
+      let params = {
+        skills: skills.split(',')
+      };
+  
+      store.searchCandidatesByParam(params, size, offset)
+        .then((result) => {
+          const status = result.status;
+          if (result.status === HttpStatusCode.OK) {
+            if ( (result.data || []).length > 0 ){
+              let candidatesObj = result.data.map((person, index) => {
+                return {
+                  candidateId: person.subjectId,
+                  username: person.username,
+                  name: person.name,
+                  picture: person.picture,
+                  pictureThumbnail: person.picture,
+                  location: person.locationName,
+                  professionalHeadline: person.professionalHeadline,
+                  skills: person.skills.map((skill, index)=>{
+                    return skill.name
+                  }).join(', ')
+                }
+              });
+              resolve({
+                status: status,
+                data: candidatesObj
+              });
+            }else{
+              resolve({
+                status: status,
+                data: result.data
+              });
+            }
+          } else {
+            resolve(result);
+          }
+        })
+        .catch(reject);
+    }
+  });
+}
+
+
 module.exports = {
   getCandidateSimpleBioByUsername,
-  getCandidateExtendedBioByUsername
+  getCandidateExtendedBioByUsername,
+  searchCandidatesBySkills
 };
