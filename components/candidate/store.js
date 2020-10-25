@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { HttpStatusCode } = require('../../utils/http_helper');
 
-function getCandidateByUsername (username) {
+function getCandidateBioByUsername (username) {
   return new Promise((resolve, reject) => {
     axios.get('https://torre.bio/api/bios/' + username)
       .then((response) => {
@@ -30,5 +30,5 @@ function getCandidateByUsername (username) {
 
 
 module.exports = {
-  getCandidateByUsername
+  getCandidateBioByUsername
 };

@@ -1,31 +1,133 @@
 const { HttpStatusCode } = require('../../utils/http_helper');
 const store = require('./store');
 
-function getCandidateByUsername (params) {
+class Candidate {
+  constructor (candidate) {
+    this.person = candidate.person;
+    this.experiences = candidate.experiences;
+    this.interests = candidate.interests;
+    this.jobs = candidate.jobs;
+    this.projects = candidate.projects;
+    this.languages = candidate.languages;
+    this.strengths = candidate.strengths;
+    this.professionalCultureGenomeResults = candidate.professionalCultureGenomeResults;
+  }
+
+  getBasicBio () {
+    const { person } = this;
+    return {
+      candidateId: person.subjectId,
+      id: person.id,
+      username: person.publicId,
+      phone: person.phone,
+      name: person.name,
+      picture: person.picture,
+      pictureThumbnail: person.pictureThumbnail,
+      summaryOfBio: person.summaryOfBio,
+      professionalHeadline: person.professionalHeadline
+    };
+  }
+
+  getExperiences () {
+    const { experiences } = this;
+    return experiences.map((experience, indexItem) => {
+      return {
+        name: experience.name,
+        duration: (experience.fromMonth ? experience.fromMonth + ' ' + experience.fromYear + ' to ' : '') + (experience.toMonth ? experience.toMonth + ' ' + experience.toYear : 'Present'),
+        organizations: experience.organizations.map((organization) => {
+          return organization.name;
+        }).join(', ')
+      };
+    });
+  }
+
+  getStrengths () {
+    const { strengths } = this;
+    return strengths.map((strength, indexItem) => {
+      return strength.name;
+    }).join(', ');
+  }
+
+  getInterests () {
+    const { interests } = this;
+    return interests.map((interest, indexItem) => {
+      return interest.name;
+    }).join(', ');
+  }
+
+  getJobs () {
+    const { jobs } = this;
+    return jobs.map((job, indexItem) => {
+      return {
+        name: job.name,
+        duration: (job.fromMonth ? job.fromMonth + ' ' + job.fromYear + ' to ' : '') + (job.toMonth ? job.toMonth + ' ' + job.toYear : 'Present'),
+        organizations: job.organizations.map((organization) => {
+          return organization.name;
+        }).join(', ')
+      };
+    });
+  }
+
+  getProfessionalCulture () {
+    const { professionalCultureGenomeResults } = this;
+    return professionalCultureGenomeResults.groups.map((group, indexItem) => {
+      return group.text;
+    }).join(', ');
+  }
+
+  getExtendedBio () {
+    return {
+      basicBio: this.getBasicBio(),
+      experiences: this.getExperiences(),
+      strengths: this.getStrengths(),
+      interests: this.getInterests(),
+      jobs: this.getJobs(),
+      professionalCulture: this.getProfessionalCulture()
+    };
+  }
+}
+
+function getCandidateSimpleBioByUsername (params) {
   return new Promise((resolve, reject) => {
     const username = params.username;
 
     if (typeof (username) === 'undefined') {
       reject(new Error('Parameter not defined or empty'));
     } else {
-      store.getCandidateByUsername(username)
+      store.getCandidateBioByUsername(username)
         .then((result) => {
+          const status = result.status;
           if (result.status === HttpStatusCode.OK) {
-            const personInfo  = result.data.person;
-            const candidateInfo = {
-              canidateId: personInfo.subjectId,
-              id: personInfo.id,
-              username: personInfo.publicId,
-              phone: personInfo.phone,
-              name: personInfo.name,
-              picture: personInfo.picture,
-              pictureThumbnail: personInfo.pictureThumbnail,
-              summaryOfBio: personInfo.summaryOfBio,
-              professionalHeadline: personInfo.professionalHeadline
-            };
-            console.log('Candidate Info');
-            console.log(candidateInfo);
-            resolve(candidateInfo);
+            const candidateObj = new Candidate(result.data);
+            resolve({
+              status: status,
+              data: candidateObj.getBasicBio()
+            });
+          } else {
+            resolve(result);
+          }
+        })
+        .catch(reject);
+    }
+  });
+}
+
+function getCandidateExtendedBioByUsername (params) {
+  return new Promise((resolve, reject) => {
+    const username = params.username;
+
+    if (typeof (username) === 'undefined') {
+      reject(new Error('Parameter not defined or empty'));
+    } else {
+      store.getCandidateBioByUsername(username)
+        .then((result) => {
+          const status = result.status;
+          if (result.status === HttpStatusCode.OK) {
+            const candidateObj = new Candidate(result.data);
+            resolve({
+              status: status,
+              data: candidateObj.getExtendedBio()
+            });
           } else {
             resolve(result);
           }
@@ -36,5 +138,6 @@ function getCandidateByUsername (params) {
 }
 
 module.exports = {
-  getCandidateByUsername
+  getCandidateSimpleBioByUsername,
+  getCandidateExtendedBioByUsername
 };
