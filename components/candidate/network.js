@@ -14,9 +14,9 @@ router.get('/simple/:username', function (req, res) {
       .then((result) => {
         if ((typeof (result) !== 'undefined' && result.length > 0) || (typeof (result) === 'object')) {
           if (result.status === HttpStatusCode.OK){
-            response.success(req, res, result.data, HttpStatusCode.OK);
+            res.status(HttpStatusCode.OK).send(result.data);
           }else{
-            response.error(req, res, result.error, result.status, result.error, result);
+            res.status(result.status).send(result.data);
           }
         } else {
           response.error(req, res, labels.LABEL_EMPTY_DATA, HttpStatusCode.UNAUTHORIZED);
