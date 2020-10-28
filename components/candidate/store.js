@@ -28,7 +28,7 @@ function getCandidateBioByUsername (username) {
   });
 }
 
-function searchCandidatesByParam (params, size, offset) {
+function searchCandidatesByParam (params, size = 10, offset = 0) {
   return new Promise((resolve, reject) => {
     const url = 'https://search.torre.co/people/_search/?page=0&aggregate=true&offset=' + offset + '&size=' + size;
     const data = params.skills.map((skill, index) => {

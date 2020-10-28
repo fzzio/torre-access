@@ -140,7 +140,6 @@ function getCandidateExtendedBioByUsername (params) {
 
 function searchCandidatesBySkills (opts) {
   return new Promise((resolve, reject) => {
-    console.log('searchCandidatesBySkills');
     const { skills, size, offset } = opts;
 
     if (typeof skills === 'undefined') {
