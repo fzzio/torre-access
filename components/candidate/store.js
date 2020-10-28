@@ -15,8 +15,8 @@ function getCandidateBioByUsername (username) {
         if (error.response) {
           const responseData = {
             status: error.response.status,
-            code: error.response.data.code,
-            error: error.response.data.message
+            error: error.response.data.error,
+            message: error.response.data.message
           };
           resolve(responseData);
         } else if (error.request) {
@@ -49,7 +49,7 @@ function searchCandidatesByParam (params, size, offset) {
       .then((response) => {
         const responseData = {
           status: response.status,
-          data: response.data.results
+          data: response.data
         };
         resolve(responseData);
       })
@@ -57,8 +57,8 @@ function searchCandidatesByParam (params, size, offset) {
         if (error.response) {
           const responseData = {
             status: error.response.status,
-            code: error.response.data.code,
-            error: error.response.data.message
+            error: error.response.data.error,
+            message: error.response.data.message
           };
           resolve(responseData);
         } else if (error.request) {
