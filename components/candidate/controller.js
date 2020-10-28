@@ -31,11 +31,11 @@ class Candidate {
 
   getExperiences () {
     const { experiences } = this;
-    return experiences.map((experience, indexItem) => {
+    return (experiences || []).map((experience, indexItem) => {
       return {
         name: experience.name,
         duration: (experience.fromMonth ? experience.fromMonth + ' ' + experience.fromYear + ' to ' : '') + (experience.toMonth ? experience.toMonth + ' ' + experience.toYear : 'Present'),
-        organizations: experience.organizations.map((organization) => {
+        organizations: (experience.organizations || []).map((organization) => {
           return organization.name;
         }).join(', ')
       };
@@ -44,25 +44,25 @@ class Candidate {
 
   getStrengths () {
     const { strengths } = this;
-    return strengths.map((strength, indexItem) => {
+    return (strengths || []).map((strength, indexItem) => {
       return strength.name;
     }).join(', ');
   }
 
   getInterests () {
     const { interests } = this;
-    return interests.map((interest, indexItem) => {
+    return (interests || []).map((interest, indexItem) => {
       return interest.name;
     }).join(', ');
   }
 
   getJobs () {
     const { jobs } = this;
-    return jobs.map((job, indexItem) => {
+    return (jobs || []).map((job, indexItem) => {
       return {
         name: job.name,
         duration: (job.fromMonth ? job.fromMonth + ' ' + job.fromYear + ' to ' : '') + (job.toMonth ? job.toMonth + ' ' + job.toYear : 'Present'),
-        organizations: job.organizations.map((organization) => {
+        organizations: (job.organizations || []).map((organization) => {
           return organization.name;
         }).join(', ')
       };
@@ -71,7 +71,7 @@ class Candidate {
 
   getProfessionalCulture () {
     const { professionalCultureGenomeResults } = this;
-    return professionalCultureGenomeResults.groups.map((group, indexItem) => {
+    return (professionalCultureGenomeResults.groups || []).map((group, indexItem) => {
       return group.text;
     }).join(', ');
   }
@@ -138,47 +138,42 @@ function getCandidateExtendedBioByUsername (params) {
   });
 }
 
-function searchCandidatesBySkills(opts){
+function searchCandidatesBySkills (opts) {
   return new Promise((resolve, reject) => {
-    console.log("searchCandidatesBySkills");
-    const {skills, size, offset} = opts;
+    const { skills, size, offset } = opts;
 
     if (typeof skills === 'undefined') {
       reject(new Error('Parameter not defined or empty'));
     } else {
-      let params = {
+      const params = {
         skills: skills.split(',')
       };
-  
+
       store.searchCandidatesByParam(params, size, offset)
         .then((result) => {
           const status = result.status;
           if (result.status === HttpStatusCode.OK) {
-            if ( (result.data || []).length > 0 ){
-              let candidatesObj = result.data.map((person, index) => {
-                return {
-                  candidateId: person.subjectId,
-                  username: person.username,
-                  name: person.name,
-                  picture: person.picture,
-                  pictureThumbnail: person.picture,
-                  location: person.locationName,
-                  professionalHeadline: person.professionalHeadline,
-                  skills: person.skills.map((skill, index)=>{
-                    return skill.name
-                  }).join(', ')
-                }
-              });
-              resolve({
-                status: status,
-                data: candidatesObj
-              });
-            }else{
-              resolve({
-                status: status,
-                data: result.data
-              });
-            }
+            const candidatesObj = (result.data.results || []).map((person, index) => {
+              return {
+                candidateId: person.subjectId,
+                username: person.username,
+                name: person.name,
+                picture: person.picture,
+                pictureThumbnail: person.picture,
+                location: person.locationName,
+                professionalHeadline: person.professionalHeadline,
+                skills: (person.skills || []).map((skill, index) => {
+                  return skill.name;
+                }).join(', ')
+              };
+            });
+            resolve({
+              status: status,
+              data: {
+                results: candidatesObj,
+                resultCount: result.data.total
+              }
+            });
           } else {
             resolve(result);
           }
@@ -187,7 +182,6 @@ function searchCandidatesBySkills(opts){
     }
   });
 }
-
 
 module.exports = {
   getCandidateSimpleBioByUsername,
